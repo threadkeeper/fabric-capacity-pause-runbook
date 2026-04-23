@@ -25,6 +25,43 @@ Automatically pause your Microsoft Fabric capacity every evening and resume it e
 
 ---
 
+## Required Permissions (RBAC Roles)
+
+You need specific Azure RBAC (Role-Based Access Control) permissions to complete this setup. The table below lists what is required and where.
+
+### Roles You Need (Your User Account)
+
+| Task | Minimum Role Required | Scope |
+|---|---|---|
+| Create an Automation Account | **Contributor** | Resource group where the Automation Account will live |
+| Enable System-Assigned Managed Identity | **Contributor** | The Automation Account (included when creating it) |
+| Import modules, create runbooks, schedules, and variables | **Automation Contributor** or **Contributor** | The Automation Account |
+| Assign a role to the Managed Identity on the Fabric capacity | **Owner** or **User Access Administrator** | The Fabric capacity resource (or its resource group) |
+
+> **Why Owner or User Access Administrator?** The `Contributor` role lets you manage resources but does **not** allow you to create role assignments. To grant the Managed Identity access to the Fabric capacity, you must have a role that includes `Microsoft.Authorization/roleAssignments/write` — that is either **Owner** or **User Access Administrator**.
+
+### Role Assigned to the Managed Identity
+
+| Role | Scope | Purpose |
+|---|---|---|
+| **Contributor** | The Fabric capacity resource | Allows the Automation Account's managed identity to suspend and resume the capacity |
+
+> **Least privilege note:** The `Contributor` role on the Fabric capacity is the minimum built-in role that includes the `Microsoft.Fabric/capacities/suspend/action` and `Microsoft.Fabric/capacities/resume/action` permissions. If your organization prefers tighter access, you can create a [custom role](https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles) that includes only those two actions plus `Microsoft.Fabric/capacities/read`.
+
+### How to Check Your Roles
+
+**Portal:** Navigate to the resource (subscription, resource group, or Fabric capacity) → **Access control (IAM)** → **View my access**.
+
+**PowerShell:**
+```powershell
+# Check your roles on a specific resource group
+Get-AzRoleAssignment -SignInName "your-email@domain.com" -ResourceGroupName "rg-fabric"
+```
+
+If you do not have the required roles, ask your Azure subscription Owner or User Access Administrator to assign them to you.
+
+---
+
 ## Choose Your Path
 
 This guide provides **two independent paths** to set everything up. Both achieve the same result — pick whichever fits your comfort level.
@@ -43,7 +80,7 @@ This guide provides **two independent paths** to set everything up. Both achieve
 ## Prerequisites
 
 - An Azure subscription with an existing **Microsoft Fabric capacity** already created.
-- **Owner** or **Contributor + User Access Administrator** role on the resource group that contains the Fabric capacity.
+- The required RBAC roles listed in [Required Permissions](#required-permissions-rbac-roles) above.
 - For the VS Code path: [Visual Studio Code](https://code.visualstudio.com/) and [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) installed locally.
 
 ---
